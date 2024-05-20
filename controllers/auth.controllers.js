@@ -168,13 +168,13 @@ module.exports = {
         });
       }
       const token = jwt.sign({ email: findUser.email }, JWT_SECRET_KEY);
-      const html = await nodemailer.getHTML("url-resetPass.ejs", {
+      const html = await nodemailer.getHTML("reset-confirmation.ejs", {
         name: findUser.name,
         url: `${req.protocol}://${req.get(
           "host"
         )}/api/v1/reset-password?token=${token}`,
       });
-      await nodemailer.sendMail(email, "Email Forget Password", html);
+      await nodemailer.sendMail(email, "Reset your password here!", html);
       return res.status(200).json({
         status: true,
         message: "Success Send Email Forget Password",
