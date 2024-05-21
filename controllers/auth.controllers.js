@@ -5,12 +5,13 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { JWT_SECRET_KEY } = process.env;
 const nodemailer = require("../libs/nodemailer");
+const { formattedDate } = require("../libs/formattedDate");
 // const { getHTML, sendMail } = require("../libs/nodemailer");
 
 module.exports = {
   register: async (req, res, next) => {
     try {
-      let { name, email, password } = req.body;
+      const { name, email, password } = req.body;
 
       if (!name || !email || !password) {
         return res.status(400).json({
@@ -20,7 +21,7 @@ module.exports = {
         });
       }
 
-      let exist = await prisma.user.findFirst({ where: { email } });
+      const exist = await prisma.user.findUnique({ where: { email } });
       if (exist) {
         return res.status(401).json({
           status: false,
@@ -29,15 +30,24 @@ module.exports = {
         });
       }
 
-      let encryptedPassword = await bcrypt.hash(password, 10);
-      let userData = {
-        name,
-        email,
-        password: encryptedPassword,
-      };
-
-      let user = await prisma.user.create({ data: userData });
+      const encryptedPassword = await bcrypt.hash(password, 10);
+      const user = await prisma.user.create({
+        data: { name, email, password: encryptedPassword },
+      });
       delete user.password;
+
+      // Create a welcome notification
+      const notification = await prisma.notification.create({
+        data: {
+          title: "Welcome!",
+          message: "Your account has been created successfully.",
+          createdDate: formattedDate(new Date()),
+          user: { connect: { id: user.id } },
+        },
+      });
+
+      // Emit the notification using Socket.io
+      global.io.emit(`user-${user.id}`, notification);
 
       return res.status(201).json({
         status: true,
@@ -51,7 +61,8 @@ module.exports = {
 
   login: async (req, res, next) => {
     try {
-      let { email, password } = req.body;
+      const { email, password } = req.body;
+
       if (!email || !password) {
         return res.status(400).json({
           status: false,
@@ -60,8 +71,7 @@ module.exports = {
         });
       }
 
-      let user = await prisma.user.findFirst({ where: { email } });
-      console.log(user);
+      const user = await prisma.user.findFirst({ where: { email } });
       if (!user) {
         return res.status(400).json({
           status: false,
@@ -70,7 +80,7 @@ module.exports = {
         });
       }
 
-      let isPasswordCorrect = await bcrypt.compare(password, user.password);
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
       if (!isPasswordCorrect) {
         return res.status(400).json({
           status: false,
@@ -80,7 +90,20 @@ module.exports = {
       }
 
       delete user.password;
-      let token = jwt.sign(user, JWT_SECRET_KEY);
+      const token = jwt.sign(user, JWT_SECRET_KEY);
+
+      // Create a login notification
+      const notification = await prisma.notification.create({
+        data: {
+          title: "Successfully Logged In",
+          message: "Enjoy your access to the web.",
+          createdDate: formattedDate(new Date()),
+          user: { connect: { id: user.id } },
+        },
+      });
+
+      // Emit the notification using Socket.io
+      global.io.emit(`user-${user.id}`, notification);
 
       return res.status(201).json({
         status: true,
@@ -208,7 +231,8 @@ module.exports = {
       if (password !== newPassword) {
         return res.status(401).json({
           status: false,
-          message: "Please ensure that the password and password confirmation match!",
+          message:
+            "Please ensure that the password and password confirmation match!",
           data: null,
         });
       }
@@ -261,6 +285,21 @@ module.exports = {
     try {
       let { token } = req.query;
       res.render("reset-pass.ejs", { token });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  pageNotification: async (req, res, next) => {
+    try {
+      const userId = Number(req.params.id);
+      const notifications = await prisma.notification.findMany({
+        where: { user_id: userId },
+      });
+      res.render("notification-page.ejs", {
+        user_id: userId,
+        notifications: notifications,
+      });
     } catch (error) {
       next(error);
     }

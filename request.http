@@ -13,13 +13,12 @@ POST http://localhost:3000/api/v1/login
 Content-Type: application/json
 
 {
-    "email":"ykohleducation@gmail.com",
+    "email":"kevinyohanesteen@gmail.com",
     "password":"password123"
 }
 
 ### index
 GET http://localhost:3000/api/v1/index
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzE2MDMxMjM1fQ.5PqcY0euIclY7kbcg9HtsI8sjp265tidGtwCeqN1roI
 
 ### delete
 DELETE http://localhost:3000/api/v1/delete/1

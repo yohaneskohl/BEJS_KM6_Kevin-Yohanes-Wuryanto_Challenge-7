@@ -22,7 +22,7 @@ const fs = require("fs");
 
 router.post("/register", auth.register);
 router.post("/login", auth.login);
-router.get("/index", restrict, auth.index);
+router.get("/index",  auth.index);
 router.delete("/delete/:id", restrict, auth.delete);
 router.get("/whoami", restrict, auth.whoami);
 
@@ -39,5 +39,7 @@ router.get("/forget-password", auth.pageForgetPass);
 router.get("/reset-password", auth.pageResetPass);
 
 
+//notification
+router.get("/users/:id/notification", auth.pageNotification);
 
 module.exports = router;

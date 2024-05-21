@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-image: linear-gradient(to right top, #051937, #004d7a, #008793, #00bf72, #a8eb12);
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, rgba(0, 123, 255, 0.8), rgba(0, 191, 114, 0.8));
+            color: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        main {
+            flex: 1;
+            width: 100%;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: #343a40;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        li:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        li b {
+            color: #007bff;
+            font-size: 18px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        li p {
+            color: #495057;
+            margin: 0;
+        }
+
+        li span {
+            color: #6c757d;
+            font-size: 12px;
+            display: block;
+            margin-top: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            margin-top: 20px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Notifications</h1>
+        </header>
+        <main>
+            <h2>Your notifications:</h2>
+            <ul id="notification-list">
+                <% notifications.forEach(notification => { %>
+                    <li>
+                        <b><%= notification.title %></b>
+                        <p><%= notification.message %></p>
+                        <span><%= notification.createdDate %></span>
+                    </li>
+                <% }) %>
+            </ul>
+        </main>
+        <footer>
+            <p>&copy; 2024 ykohl dev. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const socket = io();
+            const notifications = document.getElementById("notification-list");
+            const userId = `<%= user_id %>`;
+
+            socket.on(`user-${userId}`, (notification) => {
+                const item = document.createElement('li');
+                item.innerHTML = `
+                    <b>${notification.title}</b>
+                    <p>${notification.message}</p>
+                    <span>${notification.createdDate}</span>
+                `;
+                notifications.appendChild(item);
+            });
+        });
+    </script>
+</body>
+</html>
